@@ -8,25 +8,12 @@
 #include "semaphore.h"
 
 
-#define SEM_ARR_SIZE 10
-
-
-struct semaphore
-{
-    unsigned int value;
-    unsigned int sem_initial;
-    struct spinlock sem_lock;
-};
- 
-struct semaphore sem[SEM_ARR_SIZE];
-
-
 /* Abre y/o incializa el semaforo sem con un valor arbitrario "value" */
-uint64 
+uint64
 sys_sem_open(void){
-    int sem_number; 
+    int sem_number;
     int value;
-    argint(0,&sem_number); 
+    argint(0,&sem_number);
     argint(1,&value);
     //CHECKS: semaforo valido
     if (sem_number >= SEM_ARR_SIZE ){
@@ -42,7 +29,7 @@ sys_sem_open(void){
 }
 
 /* Libera el semaforo */
-uint64 
+uint64
 sys_sem_close(void){
     int sem_number;
     argint(0,&sem_number);
@@ -60,7 +47,7 @@ sys_sem_close(void){
     sem[sem_number].value = 0u;
     sem[sem_number].sem_initial = 0u;
     release(&sem[sem_number].sem_lock);
-    
+
     return 0;
 }
 
@@ -73,9 +60,9 @@ sys_sem_up(void){
         printf("error: %d no es un nro de semáforo válido\n", sem_number);
         return -1;
     }
-    acquire(&sem[sem_number].sem_lock); 
-    sem[sem_number].value = sem[sem_number].value + 1; 
-    release(&sem[sem_number].sem_lock);      
+    acquire(&sem[sem_number].sem_lock);
+    sem[sem_number].value = sem[sem_number].value + 1;
+    release(&sem[sem_number].sem_lock);
     if (sem[sem_number].value == 1){
         wakeup(&sem[sem_number]);                         // Despierta los procesos del canal &sem[sem_number]
     }
@@ -92,12 +79,12 @@ sys_sem_down(void){
         return -1;
     }
     acquire(&sem[sem_number].sem_lock);
-    while (sem[sem_number].value == 0) { 
+    while (sem[sem_number].value == 0) {
         sleep(&sem[sem_number], &sem[sem_number].sem_lock); // Duerme al proceso
     }
-    sem[sem_number].value = sem[sem_number].value - 1;   
+    sem[sem_number].value = sem[sem_number].value - 1;
 
-    release(&sem[sem_number].sem_lock);                     // Devolvemos el lock    
+    release(&sem[sem_number].sem_lock);                     // Devolvemos el lock
 
     return 0;
 }
